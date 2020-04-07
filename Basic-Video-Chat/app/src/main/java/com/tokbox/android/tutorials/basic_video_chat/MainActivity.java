@@ -21,6 +21,8 @@ import com.opentok.android.OpentokError;
 import com.opentok.android.SubscriberKit;
 import com.tokbox.android.tutorials.basicvideochat.R;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.List;
 
 import pub.devrel.easypermissions.AfterPermissionGranted;
@@ -131,7 +133,15 @@ public class MainActivity extends AppCompatActivity
             if (OpenTokConfig.CHAT_SERVER_URL == null) {
                 // use hard coded session values
                 if (OpenTokConfig.areHardCodedConfigsValid()) {
-                    initializeSession(OpenTokConfig.API_KEY, OpenTokConfig.SESSION_ID, OpenTokConfig.TOKEN);
+                    Thread thread = new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            initializeSession(OpenTokConfig.API_KEY, OpenTokConfig.SESSION_ID, OpenTokConfig.TOKEN);
+
+
+                        }
+                    });
+                    thread.start();
                 } else {
                     showConfigError("Configuration Error", OpenTokConfig.hardCodedConfigErrorMessage);
                 }
@@ -152,7 +162,14 @@ public class MainActivity extends AppCompatActivity
 
     private void initializeSession(String apiKey, String sessionId, String token) {
 
-        mSession = new Session.Builder(this, apiKey, sessionId).build();
+        URL url = null;
+        try {
+            url = new URL("https://anvil-tbrel.opentok.com");
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+        mSession = new Session.Builder(this, apiKey, sessionId)
+                .setApiUrl(url).build();
         mSession.setSessionListener(this);
         mSession.connect(token);
     }
@@ -163,7 +180,14 @@ public class MainActivity extends AppCompatActivity
     public void onSessionConnectionDataReady(String apiKey, String sessionId, String token) {
 
         Log.d(LOG_TAG, "ApiKey: "+apiKey + " SessionId: "+ sessionId + " Token: "+token);
-        initializeSession(apiKey, sessionId, token);
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                initializeSession(apiKey, sessionId, token);
+            }
+        });
+        thread.start();
+        //initializeSession(apiKey, sessionId, token);
     }
 
     @Override
